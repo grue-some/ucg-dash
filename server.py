@@ -3,7 +3,7 @@ import json
 import subprocess
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-PORT = 38081
+PORT = 38083
 _last_cpu_ticks = None
 
 def get_stats():
