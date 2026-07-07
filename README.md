@@ -1,15 +1,17 @@
 # ucg-dash
-Unifi Cloud Gateway System Monitor: CPU temperature, CPU &amp; Memory Utilization
+  Unifi Cloud Gateway System Monitor: CPU temperature, CPU &amp; Memory Utilization
 
-Written by Google AI with some prodding & manual edits by Gruesome
+  Written by Google AI with some prodding & manual edits by grue-some
 
-Tested on UCG Ultra running v5.1.19
+  Tested on UCG Ultra running v5.1.19
 
-Installs a service named 'ucg-dash' on a Unifi Cloud Gateway. The service generates an auto-updating web page at port 38083 
-showing CPU temperature, CPU utilization, and memory utilization, and a 5 minute graph for all three variables
+  Installs a service named 'ucg-dash' on a Unifi Cloud Gateway. 
+  The service generates an auto-updating web page at port 38083 
+  showing CPU temperature, CPU utilization, and memory utilization,
+  and a 5 minute graph for all three variables
 
-Installation instructions: 
+  Installation instructions: 
 
-download (e.g. to /tmp), unzip, install
-
-source install.sh
+  download/git clone to /tmp (for different install directory, modify file locations in ucg-dash.service and server.py)
+  make install script executable: chmod a+x install.sh
+  source install script: ./install.sh

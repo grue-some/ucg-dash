@@ -61,7 +61,7 @@ class TempServer(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/javascript')
             self.end_headers()
             try:
-                with open('/root/ucg-dash/chart.js', 'rb') as f:
+                with open('/tmp/ucg-dash/chart.js', 'rb') as f:
                     self.wfile.write(f.read())
             except Exception:
                 self.send_error(404, "chart.js file missing")
@@ -72,7 +72,7 @@ class TempServer(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             try:
-                with open('/root/ucg-dash/index.html', 'rb') as f:
+                with open('/tmp/ucg-dash/index.html', 'rb') as f:
                     self.wfile.write(f.read())
             except Exception:
                 self.wfile.write(b"Error: index.html missing.")
