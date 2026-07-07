@@ -8,17 +8,17 @@
   Installs a service named 'ucg-dash' on a Unifi Cloud Gateway. 
   The service generates an auto-updating web page at port 38083 
   showing CPU temperature, CPU utilization, and memory utilization,
-  and a 5 minute graph for all three variables
+  and a 5 minute graph for all three variables.
 
   Installation instructions: 
 
-  either 
+  Either 
           git clone the project to /tmp/ucg-dash,
-  or
-          download release .zip file to /tmp 
-          unzip
-          mv <ucg-dash-n.m release directory> ucg-dash
+  Or
+          download release .zip file, unzip and 
+          move to /tmp/ucg-dash (mv <unzip directory> /tmp/ucg-dash )
   
-  (for different install directory, modify file locations in ucg-dash.service and server.py)
-  make install script executable: chmod a+x install.sh
-  source install script: ./install.sh
+  (in order to use a different install directory, modify the file locations in ucg-dash.service and server.py)
+  
+  Make install script executable: chmod a+x install.sh
+  Source install script: ./install.sh
