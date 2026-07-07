@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCG-Ultra Dashboard</title>
+    <!-- Bypasses strict browser policy constraints by validating self-execution -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline';">
+    <!-- Read the script locally from the UCG-Ultra memory instead of the internet -->
+    <script src="chart.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px 0; }
+        .container { text-align: center; max-width: 850px; width: 100%; padding: 20px; box-sizing: border-box; }
+        h1 { font-size: 1.5rem; color: #f8fafc; margin-bottom: 2rem; font-weight: 600; letter-spacing: 0.05em; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: #1e293b; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); border: 1px solid #334155; }
+        .chart-card { background: #1e293b; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); border: 1px solid #334155; text-align: left; }
+        .card-title { font-size: 0.875rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+        .display-val { font-size: 3rem; font-weight: 800; color: #38bdf8; font-variant-numeric: tabular-nums; margin: 0.5rem 0; }
+        .bar-container { background: #334155; border-radius: 9999px; height: 6px; width: 100%; margin-top: 1rem; overflow: hidden; }
+        .bar-fill { background: #38bdf8; height: 100%; width: 0%; transition: width 0.5s ease-in-out, background-color 0.5s; }
+        .status { font-size: 0.875rem; color: #64748b; margin-top: 2rem; text-align: center; }
+        .chart-wrapper { position: relative; height: 250px; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>UCG-Ultra System Status</h1>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">CPU Temperature</div>
+                <div id="temp" class="display-val">-- &deg;C</div>
+            </div>
+            <div class="card">
+                <div class="card-title">CPU Utilization</div>
+                <div id="cpu" class="display-val">--%</div>
+                <div class="bar-container"><div id="cpu-bar" class="bar-fill"></div></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Memory Usage</div>
+                <div id="mem" class="display-val">--%</div>
+                <div class="bar-container"><div id="mem-bar" class="bar-fill"></div></div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="card-title" style="margin-bottom: 1.5rem;">Performance History (Last 5 Mins)</div>
+            <div class="chart-wrapper">
+                <canvas id="historyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="status">Updating metrics live every 2 seconds. Graph updates every 4 seconds.</div>
+    </div>
+
+    <script>
+        const MAX_DATA_POINTS = 75;
+        const ctx = document.getElementById('historyChart').getContext('2d');
+        const historyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Temp (C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'CPU (%)', data: [], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'Memory (%)', data: [], borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { display: false } },
+                    y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' }, min: 0, max: 100 }
+                }
+            }
+        });
+
+        function getColor(pct, isTemp) {
+            const threshold = isTemp ? 75 : 80;
+            const warn = isTemp ? 65 : 60;
+            if (pct >= threshold) return '#ef4444';
+            if (pct >= warn) return '#f59e0b';
+            return '#38bdf8';
+        }
+
+        let updateChartCounter = 0;
+
+        function fetchStats() {
+            fetch(window.location.origin + '/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    const tempNum = parseFloat(data.temp) || 0;
+                    const cpuNum = parseFloat(data.cpu) || 0;
+                    const memNum = parseFloat(data.mem) || 0;
+                    
+                    document.getElementById('temp').innerHTML = data.temp + ' &deg;C';
+                    document.getElementById('temp').style.color = getColor(tempNum, true);
+
+                    document.getElementById('cpu').innerText = cpuNum + '%';
+                    document.getElementById('cpu-bar').style.width = cpuNum + '%';
+                    document.getElementById('cpu').style.color = document.getElementById('cpu-bar').style.backgroundColor = getColor(cpuNum, false);
+
+                    document.getElementById('mem').innerText = memNum + '%';
+                    document.getElementById('mem-bar').style.width = memNum + '%';
+                    document.getElementById('mem').style.color = document.getElementById('mem-bar').style.backgroundColor = getColor(memNum, false);
+
+                    updateChartCounter++;
+                    if (updateChartCounter >= 2 || historyChart.data.labels.length === 0) {
+                        updateChartCounter = 0;
+                        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        
+                        historyChart.data.labels.push(now);
+                        historyChart.data.datasets[0].data.push(tempNum);
+                        historyChart.data.datasets[1].data.push(cpuNum);
+                        historyChart.data.datasets[2].data.push(memNum);
+
+                        if (historyChart.data.labels.length > MAX_DATA_POINTS) {
+                            historyChart.data.labels.shift();
+                            historyChart.data.datasets[0].data.shift();
+                            historyChart.data.datasets[1].data.shift();
+                            historyChart.data.datasets[2].data.shift();
+                        }
+                        historyChart.update('none');
+                    }
+                })
+                .catch(err => {
+                    console.error("Fetch Error:", err);
+                    document.getElementById('temp').innerText = "Conn Err";
+                    document.getElementById('cpu').innerText = "Conn Err";
+                    document.getElementById('mem').innerText = "Conn Err";
+                });
+        }
+        
+        setInterval(fetchStats, 2000);
+        fetchStats();
+    </script>
+</body>
+</html>
