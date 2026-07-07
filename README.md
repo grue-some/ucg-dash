@@ -12,6 +12,13 @@
 
   Installation instructions: 
 
-  download/git clone to /tmp (for different install directory, modify file locations in ucg-dash.service and server.py)
+  either 
+          git clone the project to /tmp/ucg-dash,
+  or
+          download release .zip file to /tmp 
+          unzip
+          mv <ucg-dash-n.m release directory> ucg-dash
+  
+  (for different install directory, modify file locations in ucg-dash.service and server.py)
   make install script executable: chmod a+x install.sh
   source install script: ./install.sh
