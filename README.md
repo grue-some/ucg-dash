@@ -10,8 +10,6 @@ showing CPU temperature, CPU utilization, and memory utilization, and a 5 minute
 
 Installation instructions: 
 
-extract all to /tmp
+download (e.g. to /tmp), unzip, install
 
-cd /tmp
-
-source install.bash
+source install.sh
