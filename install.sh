@@ -1,6 +1,6 @@
 # install script for ucg-dash.service
 #
-# v1.1 : keep files in /tmp/ucg-dash
+# v1.6 :  treat current directory as install directory
 #
 cp -v ucg-dash.service /etc/systemd/system/ucg-dash.service
 #

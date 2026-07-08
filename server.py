@@ -6,6 +6,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 PORT = 38083
 _last_cpu_ticks = None
 
+# get location of chart.js and index.html
+file_path_chart = os.path.join(os.getcwd(), "chart.js")
+file_path_index = os.path.join(os.getcwd(), "index.html")
+
 def get_stats():
     global _last_cpu_ticks
     try:
@@ -61,7 +65,7 @@ class TempServer(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/javascript')
             self.end_headers()
             try:
-                with open('/tmp/ucg-dash/chart.js', 'rb') as f:
+                with open(file_path_chart, 'rb') as f:
                     self.wfile.write(f.read())
             except Exception:
                 self.send_error(404, "chart.js file missing")
@@ -72,7 +76,7 @@ class TempServer(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             try:
-                with open('/tmp/ucg-dash/index.html', 'rb') as f:
+                with open(file_path_index, 'rb') as f:
                     self.wfile.write(f.read())
             except Exception:
                 self.wfile.write(b"Error: index.html missing.")
