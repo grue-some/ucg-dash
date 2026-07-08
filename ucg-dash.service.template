@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/stefan/ucg-dash
-ExecStart=/usr/bin/python3 /home/stefan/ucg-dash/server.py
+WorkingDirectory=WORK_DIR
+ExecStart=/usr/bin/python3 WORK_DIR/server.py
 Restart=always
 RestartSec=5
 
