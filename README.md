@@ -12,11 +12,11 @@
 
   Installation instructions: 
 
-  Pick a directory, e.g. /tmp/ucg-dash or /opt/ucg-dash .
+  Pick a directory, e.g. /opt .
   
   Then, either git clone the project,
   or download and unzip the release .zip file.
           
   Verify install script is executable.
   
-  Source install script: ./install.sh .
+  Run the install script: ./install.sh .

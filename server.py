@@ -18,21 +18,9 @@ def get_stats():
         temp = "Error"
 
     try:
-        with open('/proc/stat', 'r') as f:
-            line = f.readline()
-        parts = list(map(int, line.split()[1:5]))
-        total = sum(parts)
-        idle = parts[3]
-        if _last_cpu_ticks is None:
-            _last_cpu_ticks = [total, idle]
-            cpu_util = 0
-        else:
-            diff_total = total - _last_cpu_ticks[0]
-            diff_idle = idle - _last_cpu_ticks[1]
-            _last_cpu_ticks = [total, idle]
-            cpu_util = round((1.0 - (diff_idle / diff_total)) * 100, 1) if diff_total > 0 else 0
+        load = subprocess.check_output(["ubnt-systool", "cpuload"], text=True).strip()
     except Exception:
-        cpu_util = 0
+        load = "Error"
 
     try:
         mem_info = {}
@@ -47,7 +35,7 @@ def get_stats():
     except Exception:
         mem_util = 0
 
-    return json.dumps({"temp": temp, "cpu": cpu_util, "mem": mem_util})
+    return json.dumps({"temp": temp, "cpu": load, "mem": mem_util})
 
 class TempServer(BaseHTTPRequestHandler):
     def do_GET(self):
