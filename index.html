@@ -47,17 +47,48 @@
         <div class="chart-card">
             <div class="card-title" style="margin-bottom: 1.5rem;">Performance History (Last 5 Mins)</div>
             <div class="chart-wrapper">
-                <canvas id="historyChart"></canvas>
+                <canvas id="historyChart1"></canvas>
             </div>
         </div>
 
-        <div class="status">Updating metrics live every 2 seconds. Graph updates every 4 seconds.</div>
+        <div class="chart-card">
+            <div class="card-title" style="margin-bottom: 1.5rem;">Performance History (Last 24 Hrs)</div>
+            <div class="chart-wrapper">
+                <canvas id="historyChart2"></canvas>
+            </div>
+        </div>
+
+        <div class="status">Updating metrics live every 2 seconds. Graph updates every 4 seconds (5 minute graph) and 15 minutes (24 hr graph).</div>
+
     </div>
 
     <script>
-        const MAX_DATA_POINTS = 75;
-        const ctx = document.getElementById('historyChart').getContext('2d');
-        const historyChart = new Chart(ctx, {
+        const MAX_DATA_POINTS1 = 75;
+        const MAX_DATA_POINTS2 = 96;
+
+        const ctx1 = document.getElementById('historyChart1').getContext('2d');
+        const historyChart1 = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Temp (C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'CPU (%)', data: [], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'Memory (%)', data: [], borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { display: false } },
+                    y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' }, min: 0, max: 100 }
+                }
+            }
+        });
+        const ctx2 = document.getElementById('historyChart2').getContext('2d');
+        const historyChart2 = new Chart(ctx2, {
             type: 'line',
             data: {
                 labels: [],
@@ -78,6 +109,7 @@
             }
         });
 
+
         function getColor(pct, isTemp) {
             const threshold = isTemp ? 75 : 80;
             const warn = isTemp ? 65 : 60;
@@ -86,7 +118,9 @@
             return '#38bdf8';
         }
 
-        let updateChartCounter = 0;
+        let updateChartCounter1 = 0;
+        let updateChartCounter2 = 0;
+
 
         function fetchStats() {
             fetch(window.location.origin + '/api/stats')
@@ -107,24 +141,44 @@
                     document.getElementById('mem-bar').style.width = memNum + '%';
                     document.getElementById('mem').style.color = document.getElementById('mem-bar').style.backgroundColor = getColor(memNum, false);
 
-                    updateChartCounter++;
-                    if (updateChartCounter >= 2 || historyChart.data.labels.length === 0) {
-                        updateChartCounter = 0;
+                    updateChartCounter1++;
+                    if (updateChartCounter1 >= 2 || historyChart1.data.labels.length === 0) {
+                        updateChartCounter1 = 0;
                         const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                         
-                        historyChart.data.labels.push(now);
-                        historyChart.data.datasets[0].data.push(tempNum);
-                        historyChart.data.datasets[1].data.push(cpuNum);
-                        historyChart.data.datasets[2].data.push(memNum);
+                        historyChart1.data.labels.push(now);
+                        historyChart1.data.datasets[0].data.push(tempNum);
+                        historyChart1.data.datasets[1].data.push(cpuNum);
+                        historyChart1.data.datasets[2].data.push(memNum);
 
-                        if (historyChart.data.labels.length > MAX_DATA_POINTS) {
-                            historyChart.data.labels.shift();
-                            historyChart.data.datasets[0].data.shift();
-                            historyChart.data.datasets[1].data.shift();
-                            historyChart.data.datasets[2].data.shift();
+                        if (historyChart1.data.labels.length > MAX_DATA_POINTS1) {
+                            historyChart1.data.labels.shift();
+                            historyChart1.data.datasets[0].data.shift();
+                            historyChart1.data.datasets[1].data.shift();
+                            historyChart1.data.datasets[2].data.shift();
                         }
-                        historyChart.update('none');
+                        historyChart1.update('none');
                     }
+
+                    updateChartCounter2++;
+                    if (updateChartCounter2 >= 500 || historyChart2.data.labels.length === 0) {
+                        updateChartCounter2 = 0;
+                        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        
+                        historyChart2.data.labels.push(now);
+                        historyChart2.data.datasets[0].data.push(tempNum);
+                        historyChart2.data.datasets[1].data.push(cpuNum);
+                        historyChart2.data.datasets[2].data.push(memNum);
+
+                        if (historyChart2.data.labels.length > MAX_DATA_POINTS2) {
+                            historyChart2.data.labels.shift();
+                            historyChart2.data.datasets[0].data.shift();
+                            historyChart2.data.datasets[1].data.shift();
+                            historyChart2.data.datasets[2].data.shift();
+                        }
+                        historyChart2.update('none');
+                    }
+
                 })
                 .catch(err => {
                     console.error("Fetch Error:", err);
