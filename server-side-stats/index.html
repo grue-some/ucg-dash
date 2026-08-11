@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UCG-Dash Telemetry</title>
-    <script src="charts.js"></script>
-  <!-- use local script file -->
+    <!-- use local code -->
+    <script src="http://10.0.0.100"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 20px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
@@ -13,7 +13,7 @@
         .metric { font-size: 2rem; font-weight: bold; color: #38bdf8; margin: 10px 0; }
         .threat-alert { color: #f87171 !important; }
         h3 { margin-top: 0; color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        canvas { max-height: 180px; }
+        canvas { max-height: 220px; }
     </style>
 </head>
 <body>
@@ -31,10 +31,12 @@
         </div>
 
         <div class="card">
-            <h3>Security Metrics</h3>
+            <h3>Security & Memory</h3>
+            <div id="live-ram" class="metric" style="color: #34d399;">0%</div>
+            <p>Memory Usage</p>
             <div id="live-threat-hr" class="metric threat-alert">0 / hr</div>
             <p>Hourly Threat Rate</p>
-            <div id="live-threat-day" class="metric style="color: #ef4444;">0 / day</div>
+            <div id="live-threat-day" class="metric" style="color: #ef4444;">0 / day</div>
             <p>Daily Threat Rate</p>
         </div>
 
@@ -56,7 +58,8 @@
                 datasets: [
                     { label: 'CPU Load (%)', data: [], borderColor: '#38bdf8', tension: 0.2 },
                     { label: 'Temp (°C)', data: [], borderColor: '#fbbf24', tension: 0.2 },
-                    { label: 'Threats/Hr (Rate)', data: [], borderColor: '#f87171', tension: 0.2 }
+                    { label: 'RAM (%)', data: [], borderColor: '#34d399', tension: 0.2 },
+                    { label: 'Threats/Hr', data: [], borderColor: '#f87171', tension: 0.2 }
                 ]
             },
             options: {
@@ -77,18 +80,21 @@
 
                 const latest = history[history.length - 1];
 
-                // Render rates directly on UI elements
+                // Render metrics text indicators
                 document.getElementById('live-cpu').innerText = `${latest.cpu_load}%`;
                 document.getElementById('live-temp').innerText = `${latest.temperature_c}°C`;
+                document.getElementById('live-ram').innerText = `${latest.memory_used_pct}%`;
                 document.getElementById('live-threat-hr').innerText = `${latest.threat_rate_hour} / hr`;
                 document.getElementById('live-threat-day').innerText = `${latest.threat_rate_day} / day`;
 
-                // Update Chart paths
+                // Update Chart paths with corresponding indexing
                 resourceChart.data.labels = history.map(d => new Date(d.timestamp * 1000).toLocaleTimeString());
                 resourceChart.data.datasets[0].data = history.map(d => d.cpu_load);
                 resourceChart.data.datasets[1].data = history.map(d => d.temperature_c);
-                resourceChart.data.datasets[2].data = history.map(d => d.threat_rate_hour);
-                resourceChart.update('none');
+                resourceChart.data.datasets[2].data = history.map(d => d.memory_used_pct); // Added: Explicit RAM parsing mapping
+                resourceChart.data.datasets[3].data = history.map(d => d.threat_rate_hour);
+                
+                resourceChart.update('none'); // Update smoothly without flashing animations
                 
             } catch (err) {
                 console.error("Dashboard synchronization error:", err);
@@ -100,4 +106,3 @@
     </script>
 </body>
 </html>
-
