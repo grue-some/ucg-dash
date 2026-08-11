@@ -1,15 +1,18 @@
+import os
 import time
 import threading
 import subprocess
-import os
 from datetime import datetime
 from collections import deque
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import psutil
 
-app = Flask(__name__)
+# Configure Flask to know where your static assets live
+app = Flask(__name__, static_folder='/opt/ucg-dash/static')
 CORS(app)
+
+# ... Keep all your existing buffer arrays and telemetry scraping methods exactly the same ...
 
 MAX_BUFFER_SIZE = 100
 stats_buffer = deque(maxlen=MAX_BUFFER_SIZE)
@@ -117,11 +120,18 @@ def background_metrics_logger():
             print(f"Error gathering metrics: {e}")
         time.sleep(10)
 
+
 @app.route("/api/stats", methods=["GET"])
 def get_stats():
     return jsonify(list(stats_buffer))
+
+# Add Route to serve the local dashboard asset directly from the gateway
+@app.route('/static/chart.js', methods=['GET'])
+def serve_chart_js():
+    return send_from_directory(app.static_folder, 'chart.js')
 
 if __name__ == "__main__":
     ticker = threading.Thread(target=background_metrics_logger, daemon=True)
     ticker.start()
     app.run(host="0.0.0.0", port=5000)
+    
