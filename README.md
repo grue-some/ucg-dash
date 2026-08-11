@@ -2,7 +2,7 @@
 
 Unifi Cloud Gateway System Monitor: CPU temperature, CPU \& Memory Utilization
 - latest update:
-    - version v2.0
+    - version v2.1
     - date 2026-8-10 
     - Update and removal instructions added to Readme
 
