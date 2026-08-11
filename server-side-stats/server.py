@@ -8,9 +8,15 @@ from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import psutil
 
+
+# get location of chart.js and index.html
+file_path_chart = os.path.join(os.getcwd(), "chart.js")
+<! -- file_path_index = os.path.join(os.getcwd(), "index.html")
+-->
 # Configure Flask to know where your static assets live
-app = Flask(__name__, static_folder='/opt/ucg-dash/static')
+app = Flask(__name__, static_folder=file_path_chart)
 CORS(app)
+
 
 # ... Keep all your existing buffer arrays and telemetry scraping methods exactly the same ...
 
@@ -128,7 +134,7 @@ def get_stats():
 # Add Route to serve the local dashboard asset directly from the gateway
 @app.route('/static/chart.js', methods=['GET'])
 def serve_chart_js():
-    return send_from_directory(app.static_folder, 'chart.js')
+    return send_from_directory(file_path_chart, 'chart.js')
 
 if __name__ == "__main__":
     ticker = threading.Thread(target=background_metrics_logger, daemon=True)
