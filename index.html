@@ -51,20 +51,12 @@
             </div>
         </div>
 
-        <div class="chart-card">
-            <div class="card-title" style="margin-bottom: 1.5rem;">Performance History (Last 24 Hrs)</div>
-            <div class="chart-wrapper">
-                <canvas id="historyChart2"></canvas>
-            </div>
-        </div>
-
-        <div class="status">Updating metrics live every 2 seconds. The 5 minute graph updates every 4 seconds, the 24 hr graph every 15 minutes.</div>
+        <div class="status">Updating metrics live every 2 seconds. The 5 minute graph updates every 4 seconds.</div>
 
     </div>
 
     <script>
         const MAX_DATA_POINTS1 = 75;
-        const MAX_DATA_POINTS2 = 96;
 
         const ctx1 = document.getElementById('historyChart1').getContext('2d');
         const historyChart1 = new Chart(ctx1, {
@@ -87,28 +79,6 @@
                 }
             }
         });
-        const ctx2 = document.getElementById('historyChart2').getContext('2d');
-        const historyChart2 = new Chart(ctx2, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [
-                    { label: 'Temp (C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 },
-                    { label: 'CPU (%)', data: [], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 },
-                    { label: 'Memory (%)', data: [], borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#94a3b8' } } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { display: false } },
-                    y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' }, min: 0, max: 100 }
-                }
-            }
-        });
-
 
         function getColor(pct, isTemp) {
             const threshold = isTemp ? 75 : 80;
@@ -119,8 +89,6 @@
         }
 
         let updateChartCounter1 = 0;
-        let updateChartCounter2 = 0;
-
 
         function fetchStats() {
             fetch(window.location.origin + '/api/stats')
@@ -158,25 +126,6 @@
                             historyChart1.data.datasets[2].data.shift();
                         }
                         historyChart1.update('none');
-                    }
-
-                    updateChartCounter2++;
-                    if (updateChartCounter2 >= 500 || historyChart2.data.labels.length === 0) {
-                        updateChartCounter2 = 0;
-                        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                        
-                        historyChart2.data.labels.push(now);
-                        historyChart2.data.datasets[0].data.push(tempNum);
-                        historyChart2.data.datasets[1].data.push(cpuNum);
-                        historyChart2.data.datasets[2].data.push(memNum);
-
-                        if (historyChart2.data.labels.length > MAX_DATA_POINTS2) {
-                            historyChart2.data.labels.shift();
-                            historyChart2.data.datasets[0].data.shift();
-                            historyChart2.data.datasets[1].data.shift();
-                            historyChart2.data.datasets[2].data.shift();
-                        }
-                        historyChart2.update('none');
                     }
 
                 })
