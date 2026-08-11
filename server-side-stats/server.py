@@ -106,7 +106,7 @@ def serve_dashboard():
     return send_from_directory(app.static_folder, 'index.html')
 
 # Serve the asset relative to wherever the application directory lives
-@app.route('/static/chart.js', methods=['GET'])
+@app.route('/chart.js', methods=['GET'])
 def serve_chart_js():
     return send_from_directory(app.static_folder, 'chart.js')
 
