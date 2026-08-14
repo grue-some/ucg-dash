@@ -17,9 +17,7 @@
         .threat-alert { color: #f87171 !important; }
         .threat-sub { font-size: 2.5rem; margin-bottom: 10px; }
         h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        p { margin: 0; color: #64748b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.02em; }
         
-        /* Graph Header layout updates */
         .graph-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
         .btn-toggle { background: #334155; color: #f8fafc; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: background 0.2s; }
         .btn-toggle:hover { background: #475569; }
@@ -39,11 +37,11 @@
     <h2 style="text-align: center; margin-bottom: 30px;">UCG Server-Side Metrics Dashboard</h2>
     
     <div class="layout-container">
+        <!-- Left Side: Stacked Hardware Cards with subtitles removed -->
         <div class="left-stack">
             <div class="card system-card">
                 <div>
                     <h3>CPU Load</h3>
-                    <p>Processing utilization</p>
                 </div>
                 <div id="live-cpu" class="metric">0%</div>
             </div>
@@ -51,7 +49,6 @@
             <div class="card system-card">
                 <div>
                     <h3>Core Temperature</h3>
-                    <p>Thermal threshold</p>
                 </div>
                 <div id="live-temp" class="metric" style="color: #fbbf24;">0°C</div>
             </div>
@@ -59,7 +56,6 @@
             <div class="card system-card">
                 <div>
                     <h3>Memory Usage</h3>
-                    <p>RAM Utilization</p>
                 </div>
                 <div id="live-ram" class="metric" style="color: #34d399;">0%</div>
             </div>
@@ -82,7 +78,6 @@
                     <h3>Resource Usage History</h3>
                     <div id="graph-time-range" class="time-range">Awaiting data loop...</div>
                 </div>
-                <!-- ADDED: UI Toggle Controls Buttons -->
                 <div>
                     <button id="btn-live" class="btn-toggle active" onclick="setViewMode('live')">Real-time (10s)</button>
                     <button id="btn-24h" class="btn-toggle" onclick="setViewMode('24h')">24 Hours (5m)</button>
@@ -93,7 +88,6 @@
     </div>
 
     <script>
-        // Track current display view configuration state
         let viewMode = 'live'; 
 
         const ctx = document.getElementById('resourceChart').getContext('2d');
@@ -118,43 +112,35 @@
             }
         });
 
-        // Function toggling the viewing state configurations
         function setViewMode(mode) {
             viewMode = mode;
             document.getElementById('btn-live').classList.toggle('active', mode === 'live');
             document.getElementById('btn-24h').classList.toggle('active', mode === '24h');
-            pollMetrics(); // Refresh data layout instantly on toggle action
+            pollMetrics();
         }
 
         async function pollMetrics() {
             try {
-                // Route target toggles dynamically based on button selection parameters
                 const targetUrl = viewMode === 'live' ? '/api/stats' : '/api/stats/24h';
                 const res = await fetch(targetUrl);
                 let history = await res.json();
                 if (!history || !history.length) return;
 
-                // Slice data context view if viewing live dataset window so it stays legible 
-                // Displays last 100 entries on live loop, while showing full history on 24h loop
                 const chartData = viewMode === 'live' ? history.slice(-100) : history;
-
                 const latest = history[history.length - 1];
 
-                // Maintain card real-time live tickers snapshots unchanged
                 document.getElementById('live-cpu').innerText = `${latest.cpu_load}%`;
                 document.getElementById('live-temp').innerText = `${latest.temperature_c}°C`;
                 document.getElementById('live-ram').innerText = `${latest.memory_used_pct}%`;
                 document.getElementById('live-threat-hr').innerText = `${latest.threat_rate_hour} / hr`;
                 document.getElementById('live-threat-day').innerText = `${latest.threat_rate_day} / day`;
 
-                // Calculate time window text indicators string bounds
                 const firstTime = new Date(chartData[0].timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 const lastTime = new Date(latest.timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 
                 document.getElementById('graph-time-range').innerText = 
                     `Viewing ${viewMode === 'live' ? 'Real-time window' : '24h history Log'} [${firstTime} - ${lastTime}] (${chartData.length} data points)`;
 
-                // Update charts profiles matching dynamic data maps definitions
                 resourceChart.data.labels = chartData.map(d => new Date(d.timestamp * 1000).toLocaleTimeString());
                 resourceChart.data.datasets[0].data = chartData.map(d => d.cpu_load);
                 resourceChart.data.datasets[1].data = chartData.map(d => d.temperature_c);
@@ -169,7 +155,6 @@
         }
 
         pollMetrics();
-        // Polling loop execution continues tracking seamlessly every 10 seconds
         setInterval(pollMetrics, 10000);
     </script>
 </body>
