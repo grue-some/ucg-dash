@@ -1,6 +1,6 @@
 # ucg-dash2
 
-Unifi Cloud Gateway System Monitor: CPU temperature, CPU \& Memory Utilization
+Unifi Cloud Gateway System Monitor: CPU temperature, CPU \& Memory Utilization, and Threats Rate
 - latest update:
     - version v3.1
     - date 2026-8-13 
