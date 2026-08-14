@@ -1,5 +1,5 @@
 [Unit]
-Description=Unifi Gateway Custom System Dashboard Web Server
+Description=Unifi Gateway Custom System Dashboard Web Server v2
 After=network.target
 
 [Service]
