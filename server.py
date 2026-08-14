@@ -8,14 +8,12 @@ from collections import deque
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import psutil
 
-# Dynamically locate the directory where server.py is currently installed
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 MAX_BUFFER_SIZE = 100
 stats_buffer = deque(maxlen=MAX_BUFFER_SIZE)
 
-# Threat tracking states
 threat_timestamps = []
 last_file_position = 0
 LOG_FILE_PATH = "/var/log/ulog/threat.log"
@@ -39,14 +37,14 @@ def process_new_threat_lines():
             if not line:
                 continue
             try:
-                # Target format: '2026-08-10T12:35:47-07:00'
+                # FIX: split lines cleanly. The timestamp string token is the first element
                 parts = line.split()
                 if not parts:
                     continue
-                timestamp_str = parts[0]
+                timestamp_str = parts[0] # Grab the single timestamp string token
                 
-                # Correct timezone colon mapping if required for older Python builds
-                if len(timestamp_str) > 6 and timestamp_str[-3] == ":":
+                # Strip out trailing colon inside the timezone offset if it exists
+                if len(timestamp_str) > 22 and timestamp_str[-3] == ":":
                     timestamp_str = timestamp_str[:-3] + timestamp_str[-2:]
                 
                 dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S%z")
@@ -101,51 +99,34 @@ def background_metrics_logger():
             print(f"Error gathering metrics: {e}")
         time.sleep(10)
 
-
 class UCGDashHTTPHandler(BaseHTTPRequestHandler):
-    """Custom native request handler routing API payloads and static files."""
-    
     def end_headers(self):
-        # Native CORS Header injections
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type')
         super().end_headers()
 
     def do_OPTIONS(self):
-        """Respond to preflight CORS checks smoothly."""
         self.send_response(200)
         self.end_headers()
 
     def do_GET(self):
-        # Route 1: Telemetry dynamic API data endpoint
         if self.path == "/api/stats":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            
-            response_data = json.dumps(list(stats_buffer)).encode("utf-8")
-            self.wfile.write(response_data)
+            self.wfile.write(json.dumps(list(stats_buffer)).encode("utf-8"))
             return
-
-        # Route 2: Base UI Dashboard index route
         elif self.path == "/" or self.path == "/index.html":
-            target_file = os.path.join(STATIC_DIR, 'index.html')
-            self.serve_static_file(target_file, "text/html")
+            self.serve_static_file(os.path.join(STATIC_DIR, 'index.html'), "text/html")
             return
-
-        # Route 3: Local Chart JS relative script asset asset
         elif self.path == "/static/chart.js":
-            target_file = os.path.join(STATIC_DIR, 'chart.js')
-            self.serve_static_file(target_file, "application/javascript")
+            self.serve_static_file(os.path.join(STATIC_DIR, 'chart.js'), "application/javascript")
             return
-
-        # Route 4: Fallback Handle for unmatched items
         else:
             self.send_error(404, "File Not Found")
 
     def serve_static_file(self, file_path, content_type):
-        """Helper handler to securely read and serve local disk dependencies."""
         try:
             if os.path.exists(file_path) and os.path.isfile(file_path):
                 self.send_response(200)
@@ -156,25 +137,12 @@ class UCGDashHTTPHandler(BaseHTTPRequestHandler):
             else:
                 self.send_error(404, f"Missing Asset: {os.path.basename(file_path)}")
         except Exception as e:
-            self.send_error(500, f"Internal Server Error: {e}")
+            self.send_error(500, f"Error: {e}")
 
     def log_message(self, format, *args):
-        """Silences standard connection request prints to keep journalctl logs clean."""
         pass
 
-
 if __name__ == "__main__":
-    # Launch backend hardware metrics background loop thread
     ticker = threading.Thread(target=background_metrics_logger, daemon=True)
     ticker.start()
-    
-    # Establish local network HTTP server bindings
-    server_address = ('0.0.0.0', 5000)
-    httpd = HTTPServer(server_address, UCGDashHTTPHandler)
-    print(f"UCG-Dash successfully running natively on http://localhost:5000")
-    
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down server gracefully...")
-        httpd.server_close()
+    HTTPServer(('0.0.0.0', 5000), UCGDashHTTPHandler).serve_forever()
