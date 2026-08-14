@@ -18,11 +18,19 @@
         .threat-sub { font-size: 2.5rem; margin-bottom: 10px; }
         h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
         p { margin: 0; color: #64748b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.02em; }
-        .time-range { font-size: 0.8rem; color: #64748b; margin-top: 5px; margin-bottom: 15px; font-weight: normal; }
+        
+        /* Graph Header layout updates */
+        .graph-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .btn-toggle { background: #334155; color: #f8fafc; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+        .btn-toggle:hover { background: #475569; }
+        .btn-toggle.active { background: #38bdf8; color: #0f172a; }
+        
+        .time-range { font-size: 0.8rem; color: #64748b; margin-top: 5px; font-weight: normal; }
         canvas { max-height: 240px; }
         @media (max-width: 768px) {
             .layout-container { grid-template-columns: 1fr; }
             .full-width-card { grid-column: span 1; }
+            .graph-header { flex-direction: column; gap: 10px; }
         }
     </style>
 </head>
@@ -69,14 +77,24 @@
         </div>
 
         <div class="card full-width-card">
-            <h3 style="display: inline-block; margin-right: 10px;">Resource Usage History</h3>
-            <div id="graph-time-range" class="time-range">Awaiting data loop...</div>
+            <div class="graph-header">
+                <div>
+                    <h3>Resource Usage History</h3>
+                    <div id="graph-time-range" class="time-range">Awaiting data loop...</div>
+                </div>
+                <!-- ADDED: UI Toggle Controls Buttons -->
+                <div>
+                    <button id="btn-live" class="btn-toggle active" onclick="setViewMode('live')">Real-time (10s)</button>
+                    <button id="btn-24h" class="btn-toggle" onclick="setViewMode('24h')">24 Hours (5m)</button>
+                </div>
+            </div>
             <canvas id="resourceChart"></canvas>
         </div>
     </div>
 
     <script>
-        const BACKEND_URL = '/api/stats'; 
+        // Track current display view configuration state
+        let viewMode = 'live'; 
 
         const ctx = document.getElementById('resourceChart').getContext('2d');
         const resourceChart = new Chart(ctx, {
@@ -84,10 +102,10 @@
             data: {
                 labels: [],
                 datasets: [
-                    { label: 'CPU Load (%)', data: [], borderColor: '#38bdf8', tension: 0.2 },
-                    { label: 'Temp (°C)', data: [], borderColor: '#fbbf24', tension: 0.2 },
-                    { label: 'RAM (%)', data: [], borderColor: '#34d399', tension: 0.2 },
-                    { label: 'Threats/Hr', data: [], borderColor: '#f87171', tension: 0.2 }
+                    { label: 'CPU Load (%)', data: [], borderColor: '#38bdf8', tension: 0.1, pointRadius: 1 },
+                    { label: 'Temp (°C)', data: [], borderColor: '#fbbf24', tension: 0.1, pointRadius: 1 },
+                    { label: 'RAM (%)', data: [], borderColor: '#34d399', tension: 0.1, pointRadius: 1 },
+                    { label: 'Threats/Hr', data: [], borderColor: '#f87171', tension: 0.1, pointRadius: 1 }
                 ]
             },
             options: {
@@ -100,34 +118,48 @@
             }
         });
 
+        // Function toggling the viewing state configurations
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('btn-live').classList.toggle('active', mode === 'live');
+            document.getElementById('btn-24h').classList.toggle('active', mode === '24h');
+            pollMetrics(); // Refresh data layout instantly on toggle action
+        }
+
         async function pollMetrics() {
             try {
-                const res = await fetch(BACKEND_URL);
-                const history = await res.json();
+                // Route target toggles dynamically based on button selection parameters
+                const targetUrl = viewMode === 'live' ? '/api/stats' : '/api/stats/24h';
+                const res = await fetch(targetUrl);
+                let history = await res.json();
                 if (!history || !history.length) return;
+
+                // Slice data context view if viewing live dataset window so it stays legible 
+                // Displays last 100 entries on live loop, while showing full history on 24h loop
+                const chartData = viewMode === 'live' ? history.slice(-100) : history;
 
                 const latest = history[history.length - 1];
 
+                // Maintain card real-time live tickers snapshots unchanged
                 document.getElementById('live-cpu').innerText = `${latest.cpu_load}%`;
                 document.getElementById('live-temp').innerText = `${latest.temperature_c}°C`;
                 document.getElementById('live-ram').innerText = `${latest.memory_used_pct}%`;
                 document.getElementById('live-threat-hr').innerText = `${latest.threat_rate_hour} / hr`;
                 document.getElementById('live-threat-day').innerText = `${latest.threat_rate_day} / day`;
 
-                const firstTime = new Date(history[0].timestamp * 1000).toLocaleTimeString();
-                const lastTime = new Date(latest.timestamp * 1000).toLocaleTimeString();
+                // Calculate time window text indicators string bounds
+                const firstTime = new Date(chartData[0].timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const lastTime = new Date(latest.timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 
-                if (history.length === 1) {
-                    document.getElementById('graph-time-range').innerText = `Data window started at ${firstTime}`;
-                } else {
-                    document.getElementById('graph-time-range').innerText = `Displaying data from ${firstTime} to ${lastTime} (${history.length} data points)`;
-                }
+                document.getElementById('graph-time-range').innerText = 
+                    `Viewing ${viewMode === 'live' ? 'Real-time window' : '24h history Log'} [${firstTime} - ${lastTime}] (${chartData.length} data points)`;
 
-                resourceChart.data.labels = history.map(d => new Date(d.timestamp * 1000).toLocaleTimeString());
-                resourceChart.data.datasets[0].data = history.map(d => d.cpu_load);
-                resourceChart.data.datasets[1].data = history.map(d => d.temperature_c);
-                resourceChart.data.datasets[2].data = history.map(d => d.memory_used_pct);
-                resourceChart.data.datasets[3].data = history.map(d => d.threat_rate_hour);
+                // Update charts profiles matching dynamic data maps definitions
+                resourceChart.data.labels = chartData.map(d => new Date(d.timestamp * 1000).toLocaleTimeString());
+                resourceChart.data.datasets[0].data = chartData.map(d => d.cpu_load);
+                resourceChart.data.datasets[1].data = chartData.map(d => d.temperature_c);
+                resourceChart.data.datasets[2].data = chartData.map(d => d.memory_used_pct);
+                resourceChart.data.datasets[3].data = chartData.map(d => d.threat_rate_hour);
                 
                 resourceChart.update('none');
                 
@@ -137,6 +169,7 @@
         }
 
         pollMetrics();
+        // Polling loop execution continues tracking seamlessly every 10 seconds
         setInterval(pollMetrics, 10000);
     </script>
 </body>
