@@ -11,7 +11,8 @@ import psutil
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
-MAX_BUFFER_SIZE = 100
+# FIX: Expanded buffer size to track exactly 24 hours of data history
+MAX_BUFFER_SIZE = 8640
 stats_buffer = deque(maxlen=MAX_BUFFER_SIZE)
 
 threat_timestamps = []
@@ -37,16 +38,12 @@ def process_new_threat_lines():
             if not line:
                 continue
             try:
-                # FIX: split lines cleanly. The timestamp string token is the first element
                 parts = line.split()
                 if not parts:
                     continue
-                timestamp_str = parts[0] # Grab the single timestamp string token
-                
-                # Strip out trailing colon inside the timezone offset if it exists
+                timestamp_str = parts[0]
                 if len(timestamp_str) > 22 and timestamp_str[-3] == ":":
                     timestamp_str = timestamp_str[:-3] + timestamp_str[-2:]
-                
                 dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S%z")
                 threat_timestamps.append(dt.timestamp())
             except (ValueError, IndexError):
@@ -111,12 +108,24 @@ class UCGDashHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        # Route 1: Real-time window data stream (returns everything up to total max buffer)
         if self.path == "/api/stats":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(list(stats_buffer)).encode("utf-8"))
             return
+            
+        # ADDED Route 2: Server-side downsampling (slices history array every 5 minutes / 30 points)
+        elif self.path == "/api/stats/24h":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            raw_list = list(stats_buffer)
+            downsampled = raw_list[::30]  # Take every 30th entry (10s * 30 = 5 minutes)
+            self.wfile.write(json.dumps(downsampled).encode("utf-8"))
+            return
+            
         elif self.path == "/" or self.path == "/index.html":
             self.serve_static_file(os.path.join(STATIC_DIR, 'index.html'), "text/html")
             return
