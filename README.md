@@ -2,18 +2,18 @@
 
 Unifi Cloud Gateway System Monitor: CPU temperature, CPU \& Memory Utilization, and Threats Rate
 - latest update:
-    - version v3.1
-    - date 2026-8-13 
-    - updated for server side version ucg-dash2
+    - version v3.2
+    - date 2026-8-17 
+    - updated to include a web page icon
 
 - Written by Google AI with some prodding \& manual edits by grue-some
-- Tested on UCG Ultra running Unifi OS v5.1.19 to v5.1.29
+- Tested on UCG Ultra running Unifi OS v5.1.19 to v5.1.30
 
 - Installs a service named 'ucg-dash2' on a Unifi Cloud Gateway. 
 The service generates an auto-updating web page at port 5000
 showing CPU temperature, CPU utilization, memory utilization, and
 the hourly and daily rate of threats in /var/log/ulog/threat.log,  
-with a graph for all five variables. 
+with a history graph below. 
 
 ## Installation instructions:
 - Pick a directory, e.g. /opt .
