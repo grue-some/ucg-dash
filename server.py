@@ -128,8 +128,11 @@ class UCGDashHTTPHandler(BaseHTTPRequestHandler):
             
         elif self.path == "/" or self.path == "/index.html":
             self.serve_static_file(os.path.join(STATIC_DIR, 'index.html'), "text/html")
+            return      
+        elif self.path == "/static/favicon.ico":
+            self.serve_static_file(os.path.join(STATIC_DIR, 'favicon.ico'), "image/x-icon")
             return
-        elif self.path == "/static/chart.js":
+         elif self.path == "/static/chart.js":
             self.serve_static_file(os.path.join(STATIC_DIR, 'chart.js'), "application/javascript")
             return
         else:
