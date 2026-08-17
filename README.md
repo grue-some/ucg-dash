@@ -2,9 +2,9 @@
 
 Unifi Cloud Gateway System Monitor: CPU temperature, CPU \& Memory Utilization, and Threats Rate
 - latest update:
-    - version v3.2
+    - version v3.3
     - date 2026-8-17 
-    - updated to include a web page icon
+    - updated to include a web page icon; indentation fix in server.py
 
 - Written by Google AI with some prodding \& manual edits by grue-some
 - Tested on UCG Ultra running Unifi OS v5.1.19 to v5.1.30
