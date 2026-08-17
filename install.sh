@@ -4,7 +4,7 @@
 #         move chart.js and index.html to /static subdirectory
 #
 mkdir -p static
-mv index.html chart.js static/
+mv index.html chart.js favicon.ico static/
 #
 cp ucg-dash2.service.template ucg-dash2.service
 sed -i "s|WORK_DIR|$(pwd)|g"  ucg-dash2.service
