@@ -1,4 +1,5 @@
 # ucg-dash2
+<img width="2472" height="1360" alt="image" src="https://github.com/user-attachments/assets/9ca600cf-962c-46e6-8e85-ac91c290a09a" />
 
 Unifi Cloud Gateway System Monitor: CPU temperature, CPU \& Memory Utilization, and Threats Rate
 - latest update:
