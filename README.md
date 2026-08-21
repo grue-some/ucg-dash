@@ -17,19 +17,23 @@ the hourly and daily rate of threats in /var/log/ulog/threat.log,
 with a history graph below. 
 
 ## Installation instructions:
-- Pick a directory, e.g. /opt .
-- Then, either git clone the project,
-or download and unzip the release .zip file.
+- ssh into your Unifi Cloud Gateway
+- Pick a directory, e.g. /opt or /data
+- There, either git clone the project,
+or download and unzip the release .zip file (e.g. wget 
 - Verify install script is executable.
 - Run the install script: ./install.sh .
 
 ## Update instructions:
+- ssh into your Unifi Cloud Gateway
 - Stop the service: systemctl stop ucg-dash2.service
 - Run the install script
 
 ## Removal instructions:
+- ssh into your Unifi Cloud Gateway
 - Stop the service: systemctl stop ucg-dash2.service
 - Disable the service: systemctl disable ucg-dash2.service
+- - cd to your install location, e.g. /opt or /data
 - Delete the service file: rm /etc/systemd/system/ucg-dash2.service
 - Delete the install directory: rm -r ucg-dash-*version number*; e.g. rm -r ucg-dash-1.9
 - Delete the zip file: rm v*version number*.zip; e.g. rm v1.9.zip
