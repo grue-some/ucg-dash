@@ -20,7 +20,9 @@ with a history graph below.
 - ssh into your Unifi Cloud Gateway
 - Pick a directory, e.g. /opt or /data
 - There, either git clone the project,
-or download and unzip the release .zip file (e.g. wget 
+or download and unzip the release .zip file; e.g. for this version,
+-         wget https://github.com/grue-some/ucg-dash/archive/refs/tags/v3.3.zip
+-         unzip v3.3.zip
 - Verify install script is executable.
 - Run the install script: ./install.sh .
 
@@ -33,8 +35,8 @@ or download and unzip the release .zip file (e.g. wget
 - ssh into your Unifi Cloud Gateway
 - Stop the service: systemctl stop ucg-dash2.service
 - Disable the service: systemctl disable ucg-dash2.service
-- - cd to your install location, e.g. /opt or /data
 - Delete the service file: rm /etc/systemd/system/ucg-dash2.service
+- cd to your install location, e.g. /opt or /data
 - Delete the install directory: rm -r ucg-dash-*version number*; e.g. rm -r ucg-dash-1.9
 - Delete the zip file: rm v*version number*.zip; e.g. rm v1.9.zip
 
